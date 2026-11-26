@@ -18,6 +18,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
 });
 
+// เข้าสู่ระบบ
 app.post('/api/login', (req, res) => {
   const { username, password } = req.body;
   const sql = 'SELECT * FROM users WHERE user_name = ? AND password = ?';
@@ -34,6 +35,41 @@ app.post('/api/login', (req, res) => {
       });
     } else {
       res.status(401).json({ success: false, message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' });
+    }
+  });
+});
+
+// ดึงข้อมูลข่าวทั้งหมด
+app.get('/api/news', (req, res) => {
+  const sql = 'SELECT * FROM news ORDER BY id DESC';
+  pool.query(sql, (err, results) => {
+    if (err) {
+      console.error('Query error:', err);
+      return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการดึงข้อมูลข่าว' });
+    }
+    res.json({
+      success: true,
+      data: results,
+    });
+  });
+});
+
+// ดึงข้อมูลข่าวรายตัวตาม id
+app.get('/api/news/:id', (req, res) => {
+  const { id } = req.params;
+  const sql = 'SELECT * FROM news WHERE id = ?';
+  pool.query(sql, [id], (err, results) => {
+    if (err) {
+      console.error('Query error:', err);
+      return res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการดึงข้อมูลข่าว' });
+    }
+    if (results.length > 0) {
+      res.json({
+        success: true,
+        data: results[0],
+      });
+    } else {
+      res.status(404).json({ success: false, message: 'ไม่พบข้อมูลข่าวที่ต้องการ' });
     }
   });
 });
